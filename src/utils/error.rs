@@ -1,32 +1,32 @@
-use thiserror::Error;
 use anyhow::Result;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum ScannerError {
     #[error("Database error: {0}")]
     DatabaseError(String),
-    
+
     #[error("Solana RPC error: {0}")]
     SolanaRpcError(String),
-    
+
     #[error("Kafka error: {0}")]
     KafkaError(String),
-    
+
     #[error("WebSocket error: {0}")]
     WebSocketError(String),
-    
+
     #[error("Configuration error: {0}")]
     ConfigError(String),
-    
+
     #[error("Invalid address: {0}")]
     InvalidAddress(String),
-    
+
     #[error("Transaction not found: {0}")]
     TransactionNotFound(String),
-    
+
     #[error("Rate limit exceeded")]
     RateLimitExceeded,
-    
+
     #[error("Internal server error: {0}")]
     InternalError(String),
 }

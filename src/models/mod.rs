@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
-use mongodb::bson::doc;
 use chrono::{DateTime, Utc};
+use mongodb::bson::doc;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -147,7 +147,7 @@ pub struct TransactionQuery {
     pub address: Option<String>,
     pub transaction_type: Option<TransactionType>,
     pub start_time: Option<DateTime<Utc>>,
-    pub end_time: Option<DateTime<Utc>>, 
+    pub end_time: Option<DateTime<Utc>>,
     pub limit: Option<u32>,
     pub offset: Option<u32>,
 }

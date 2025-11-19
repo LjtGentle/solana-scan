@@ -1,9 +1,9 @@
-use mongodb::{Database, Collection};
-use mongodb::bson::doc;
 use anyhow::Result;
 use futures::TryStreamExt;
+use mongodb::bson::doc;
+use mongodb::{Collection, Database};
 
-use crate::models::{WalletAddress, Transaction, ScanStatus};
+use crate::models::{ScanStatus, Transaction, WalletAddress};
 
 pub struct WalletAddressRepo {
     collection: Collection<WalletAddress>,
@@ -22,10 +22,11 @@ impl WalletAddressRepo {
     }
 
     pub async fn get_all_active_addresses(&self) -> Result<Vec<WalletAddress>> {
-        let cursor = self.collection
+        let cursor = self
+            .collection
             .find(doc! { "is_active": true }, None)
             .await?;
-        
+
         let addresses: Vec<WalletAddress> = cursor.try_collect().await?;
         Ok(addresses)
     }
@@ -34,11 +35,11 @@ impl WalletAddressRepo {
         self.collection
             .update_one(
                 doc! { "address": address },
-                doc! { 
-                    "$set": { 
+                doc! {
+                    "$set": {
                         "is_active": false,
                         "updated_at": mongodb::bson::DateTime::now()
-                    } 
+                    }
                 },
                 None,
             )
@@ -69,7 +70,7 @@ impl TransactionRepo {
         offset: Option<u32>,
     ) -> Result<Vec<Transaction>> {
         let mut filter = doc! {};
-        
+
         if let Some(addr) = address {
             filter = doc! {
                 "$or": [
@@ -80,25 +81,29 @@ impl TransactionRepo {
         }
 
         let mut options = mongodb::options::FindOptions::default();
-        
+
         if let Some(limit) = limit {
             options.limit = Some(limit as i64);
         }
-        
+
         if let Some(offset) = offset {
             options.skip = Some(offset as u64);
         }
         let cursor = self.collection.find(filter, options).await?;
         let transactions: Vec<Transaction> = cursor.try_collect().await?;
-        
+
         Ok(transactions)
     }
 
-    pub async fn get_transaction_by_signature(&self, signature: &str) -> Result<Option<Transaction>> {
-        let transaction = self.collection
+    pub async fn get_transaction_by_signature(
+        &self,
+        signature: &str,
+    ) -> Result<Option<Transaction>> {
+        let transaction = self
+            .collection
             .find_one(doc! { "signature": signature }, None)
             .await?;
-        
+
         Ok(transaction)
     }
 }
@@ -114,10 +119,11 @@ impl ScanStatusRepo {
     }
 
     pub async fn get_scan_status(&self) -> Result<Option<ScanStatus>> {
-        let status = self.collection
+        let status = self
+            .collection
             .find_one(doc! { "id": "scan_status" }, None)
             .await?;
-        
+
         Ok(status)
     }
 
@@ -131,7 +137,7 @@ impl ScanStatusRepo {
                     .build(),
             )
             .await?;
-        
+
         Ok(())
     }
 }

@@ -1,6 +1,6 @@
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::env;
-use anyhow::Result;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct AppConfig {
@@ -11,6 +11,7 @@ pub struct AppConfig {
     pub websocket_port: u16,
     pub scan_interval_secs: u64,
     pub max_addresses: usize,
+    pub max_concurrent_requests: usize,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -30,8 +31,7 @@ impl AppConfig {
             mongodb_uri: env::var("MONGODB_URI")
                 .unwrap_or_else(|_| "mongodb://localhost:27017".to_string()),
             kafka_config: KafkaConfig {
-                brokers: env::var("KAFKA_BROKERS")
-                    .unwrap_or_else(|_| "localhost:9092".to_string()),
+                brokers: env::var("KAFKA_BROKERS").unwrap_or_else(|_| "localhost:9092".to_string()),
                 transaction_topic: env::var("KAFKA_TRANSACTION_TOPIC")
                     .unwrap_or_else(|_| "solana_transactions".to_string()),
                 client_id: env::var("KAFKA_CLIENT_ID")
@@ -53,6 +53,10 @@ impl AppConfig {
                 .unwrap_or_else(|_| "100000".to_string())
                 .parse()
                 .unwrap_or(100000),
+            max_concurrent_requests: env::var("MAX_CONCURRENT_REQUESTS")
+                .unwrap_or_else(|_| "16".to_string())
+                .parse()
+                .unwrap_or(16),
         };
 
         Ok(config)

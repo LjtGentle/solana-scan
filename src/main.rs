@@ -1,18 +1,18 @@
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, error};
+use tracing::{error, info};
 use tracing_subscriber;
 
 mod config;
+mod db;
+mod handlers;
 mod models;
 mod services;
-mod handlers;
 mod utils;
-mod db;
 
 use config::AppConfig;
-use services::{blockchain::BlockchainScanner, websocket::WebSocketManager};
 use handlers::{rpc_handler, websocket_handler};
+use services::{blockchain::BlockchainScanner, websocket::WebSocketManager};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -25,19 +25,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 加载配置
     let config = AppConfig::load()?;
-    
+
     // 初始化数据库连接
     let db_client = db::init_mongodb(&config.mongodb_uri).await?;
-    
-    // 创建区块链扫描器
-    let scanner = Arc::new(RwLock::new(BlockchainScanner::new(
-        config.solana_rpc_url.clone(),
-        db_client.clone(),
-        config.kafka_config.clone(),
-    ).await?));
 
     // 创建WebSocket管理器
     let ws_manager = Arc::new(RwLock::new(WebSocketManager::new()));
+
+    // 创建区块链扫描器
+    let scanner = Arc::new(RwLock::new(
+        BlockchainScanner::new(
+            config.solana_rpc_url.clone(),
+            db_client.clone(),
+            config.kafka_config.clone(),
+            ws_manager.clone(),
+            config.max_concurrent_requests,
+        )
+        .await?,
+    ));
 
     // 启动区块链扫描任务
     let scanner_clone = scanner.clone();

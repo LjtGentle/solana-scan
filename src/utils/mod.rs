@@ -1,2 +1,2 @@
-pub mod kafka;
 pub mod error;
+pub mod kafka;

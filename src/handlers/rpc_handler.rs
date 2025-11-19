@@ -1,13 +1,13 @@
-use std::sync::Arc;
 use axum::{
-    extract::{Query, State, Json},
+    extract::{Json, Query, State},
     response::IntoResponse,
     routing::{get, post},
     Router,
 };
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{info, error};
+use tracing::{error, info};
 
 use crate::models::{RpcResponse, Transaction};
 use crate::services::blockchain::BlockchainScanner;
@@ -68,9 +68,7 @@ async fn get_transactions(
     }
 }
 
-async fn get_addresses(
-    State(scanner): State<Arc<RwLock<BlockchainScanner>>>,
-) -> impl IntoResponse {
+async fn get_addresses(State(scanner): State<Arc<RwLock<BlockchainScanner>>>) -> impl IntoResponse {
     let addresses = scanner.read().await.get_watched_addresses().await;
     Json(RpcResponse::success(AddressResponse { addresses }))
 }
@@ -85,7 +83,9 @@ async fn add_address(
         .add_watched_address(request.address.clone())
         .await
     {
-        Ok(_) => Json(RpcResponse::success("Address added successfully".to_string())),
+        Ok(_) => Json(RpcResponse::success(
+            "Address added successfully".to_string(),
+        )),
         Err(e) => {
             error!("Failed to add address: {}", e);
             Json(RpcResponse::<String>::error(e.to_string()))
@@ -103,7 +103,9 @@ async fn remove_address(
         .remove_watched_address(address.clone())
         .await
     {
-        Ok(_) => Json(RpcResponse::success("Address removed successfully".to_string())),
+        Ok(_) => Json(RpcResponse::success(
+            "Address removed successfully".to_string(),
+        )),
         Err(e) => {
             error!("Failed to remove address: {}", e);
             Json(RpcResponse::<String>::error(e.to_string()))

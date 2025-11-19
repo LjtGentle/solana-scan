@@ -1,9 +1,9 @@
-use rdkafka::config::ClientConfig;
-use rdkafka::producer::{FutureProducer, FutureRecord};
-use rdkafka::error::{KafkaError, RDKafkaErrorCode};
-use serde_json;
 use anyhow::Result;
-use tracing::{info, error};
+use rdkafka::config::ClientConfig;
+use rdkafka::error::{KafkaError, RDKafkaErrorCode};
+use rdkafka::producer::{FutureProducer, FutureRecord};
+use serde_json;
+use tracing::{error, info};
 
 use crate::config::KafkaConfig;
 use crate::models::Transaction;
@@ -30,12 +30,16 @@ impl KafkaProducer {
 
     pub async fn send_transaction(&self, transaction: &Transaction) -> Result<()> {
         let message = serde_json::to_string(transaction)?;
-        
+
         let record = FutureRecord::to(&self.transaction_topic)
             .payload(&message)
             .key(&transaction.signature);
 
-        match self.producer.send(record, rdkafka::util::Timeout::Never).await {
+        match self
+            .producer
+            .send(record, rdkafka::util::Timeout::Never)
+            .await
+        {
             Ok(delivery) => {
                 info!("Transaction sent to Kafka: {:?}", delivery);
                 Ok(())
@@ -48,11 +52,13 @@ impl KafkaProducer {
     }
 
     pub async fn send_raw_message(&self, topic: &str, key: &str, payload: &str) -> Result<()> {
-        let record = FutureRecord::to(topic)
-            .payload(payload)
-            .key(key);
+        let record = FutureRecord::to(topic).payload(payload).key(key);
 
-        match self.producer.send(record, rdkafka::util::Timeout::Never).await {
+        match self
+            .producer
+            .send(record, rdkafka::util::Timeout::Never)
+            .await
+        {
             Ok(delivery) => {
                 info!("Message sent to Kafka topic {}: {:?}", topic, delivery);
                 Ok(())
